@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>DailyFlutterUI · Profile</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sf': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'sans-serif'],
+          },
+          keyframes: {
+            'fade-in-up': {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            'scale-pop': {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            }
+          },
+          animation: {
+            'fade-in-up': 'fade-in-up 0.4s ease-out forwards',
+            'scale-pop': 'scale-pop 0.3s ease-out forwards'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b2e 100%);
+    }
+    
+    /* Custom switch toggle */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: 0.3s;
+      border-radius: 34px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #3b82f6;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+    
+    /* Modal backdrop */
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+      background-color: rgba(0,0,0,0.65);
+      animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Hide scrollbar but keep functionality */
+    .no-scrollbar {
+      scrollbar-width: thin;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .no-scrollbar::-webkit-scrollbar-track {
+      background: #e5e7eb;
+      border-radius: 10px;
+    }
+    .no-scrollbar::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 10px;
+    }
+    
+    /* Button press effect */
+    .btn-press:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="font-sf">
+  
+  <!-- Main Container -->
+  <div class="w-full h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+    
+    <!-- Header with Back Arrow - Redirects to index.html -->
+    <div class="flex justify-between items-center px-5 pt-5 pb-3 flex-shrink-0 bg-gray-50 dark:bg-gray-900 z-10 border-b border-gray-100 dark:border-gray-800">
+      <button id="backBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white transition active:scale-95 shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700">
+        ←
+      </button>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Profile</h1>
+      <button id="editProfileBtn" class="text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full hover:bg-blue-100 transition active:scale-95">
+        Edit
+      </button>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="flex-1 overflow-y-auto px-5 pb-6 no-scrollbar">
+      
+      <!-- Profile Header Section -->
+      <div class="flex flex-col items-center mt-4 mb-6 animate-fade-in-up">
+        <div class="relative">
+          <div class="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+            C
+          </div>
+          <button id="changePhotoBtn" class="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm shadow-md hover:bg-blue-700 transition">
+            📷
+          </button>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mt-3">Chrispinus Langat</h2>
+        <div class="flex items-center gap-2 mt-1">
+          <p class="text-sm text-gray-500 dark:text-gray-400">chrispinuslangat631@gmail.com</p>
+          <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">Verified</span>
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Member since April 2024</p>
+      </div>
+      
+      <!-- Account Statistics Cards -->
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 text-center shadow-sm">
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">$3,240</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Spent this month</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 text-center shadow-sm">
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">24</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Transactions</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-3 text-center shadow-sm">
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">3</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Linked Cards</p>
+        </div>
+      </div>
+      
+      <!-- Payment Methods Section -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200">💳 Payment Methods</h3>
+          <button id="addPaymentMethodBtn" class="text-xs text-blue-600 dark:text-blue-400 font-medium">+ Add New</button>
+        </div>
+        
+        <div class="space-y-3">
+          <!-- Visa Card -->
+          <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-[#1A2A3A] to-[#0F172A] rounded-xl flex items-center justify-center text-white text-xs font-bold">VISA</div>
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">Visa Platinum</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">•••• 3456</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs px-2 py-0.5 rounded-full">Default</span>
+              <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">⋮</button>
+            </div>
+          </div>
+          
+          <!-- Mastercard -->
+          <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-[#6B21A5] to-[#D946EF] rounded-xl flex items-center justify-center text-white text-xs font-bold">MC</div>
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">Mastercard Gold</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">•••• 2222</p>
+              </div>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">⋮</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Security Section -->
+      <div class="mb-6">
+        <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">🔐 Security</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden shadow-sm">
+          <button id="changePasswordBtn" class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Change Password</span>
+            <span class="text-gray-400">→</span>
+          </button>
+          <div class="flex justify-between items-center p-4">
+            <span class="text-gray-700 dark:text-gray-300">Two-Factor Authentication</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="twoFactorToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="flex justify-between items-center p-4">
+            <span class="text-gray-700 dark:text-gray-300">Biometric Login</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="biometricToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Preferences Section -->
+      <div class="mb-6">
+        <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">⚙️ Preferences</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden shadow-sm">
+          <div class="flex justify-between items-center p-4">
+            <span class="text-gray-700 dark:text-gray-300">Dark Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="darkModeToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Language</span>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">English</span>
+              <span class="text-gray-400">→</span>
+            </div>
+          </button>
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Currency</span>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">USD ($)</span>
+              <span class="text-gray-400">→</span>
+            </div>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Notifications Section -->
+      <div class="mb-6">
+        <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">🔔 Notifications</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden shadow-sm">
+          <div class="flex justify-between items-center p-4">
+            <div>
+              <span class="text-gray-700 dark:text-gray-300">Push Notifications</span>
+              <p class="text-xs text-gray-400">Get real-time alerts</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="pushNotificationsToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="flex justify-between items-center p-4">
+            <div>
+              <span class="text-gray-700 dark:text-gray-300">Email Alerts</span>
+              <p class="text-xs text-gray-400">Transaction summaries</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="emailAlertsToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="flex justify-between items-center p-4">
+            <div>
+              <span class="text-gray-700 dark:text-gray-300">Promotional Offers</span>
+              <p class="text-xs text-gray-400">Deals and discounts</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="promoToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Spending Limits Section -->
+      <div class="mb-6">
+        <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">💰 Spending Limits</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Daily Limit</span>
+            <span class="text-sm font-semibold text-gray-900 dark:text-white">$1,500 / $2,000</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
+          </div>
+          <button class="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium">Adjust Limits →</button>
+        </div>
+      </div>
+      
+      <!-- Support Section -->
+      <div class="mb-6">
+        <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">📞 Support & Legal</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden shadow-sm">
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Help Center</span>
+            <span class="text-gray-400">→</span>
+          </button>
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">FAQ</span>
+            <span class="text-gray-400">→</span>
+          </button>
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Contact Support</span>
+            <span class="text-gray-400">→</span>
+          </button>
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Terms of Service</span>
+            <span class="text-gray-400">→</span>
+          </button>
+          <button class="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <span class="text-gray-700 dark:text-gray-300">Privacy Policy</span>
+            <span class="text-gray-400">→</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Sign Out Button -->
+      <button id="signOutBtn" class="w-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 font-semibold py-3 rounded-2xl mb-6 transition active:scale-95 hover:bg-red-100 dark:hover:bg-red-950/50">
+        Sign Out
+      </button>
+      
+      <!-- App Version -->
+      <p class="text-center text-xs text-gray-400 dark:text-gray-500 pb-4">DailyFlutterUI v2.0.0</p>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div id="editProfileModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden p-6 z-10 transform transition-all animate-scale-pop">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
+        <button id="closeEditModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+      <form id="editProfileForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+          <input type="text" id="editName" value="Alex Morgan" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+          <input type="email" id="editEmail" value="alex.morgan@dailyflutter.com" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+          <input type="tel" id="editPhone" value="+1 (555) 123-4567" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all btn-press mt-4">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="passwordModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden p-6 z-10 transform transition-all animate-scale-pop">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Change Password</h2>
+        <button id="closePasswordModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+      <form id="passwordForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
+          <input type="password" placeholder="Enter current password" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+          <input type="password" placeholder="Enter new password" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+          <input type="password" placeholder="Confirm new password" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all btn-press mt-4">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ======================== BACK BUTTON REDIRECT TO INDEX.HTML ========================
+    const backBtn = document.getElementById('backBtn');
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+    
+    // ======================== DARK MODE TOGGLE ========================
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const htmlElement = document.documentElement;
+    
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      document.documentElement.classList.add('dark');
+      darkModeToggle.checked = true;
+    }
+    
+    darkModeToggle.addEventListener('change', () => {
+      if (darkModeToggle.checked) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('darkMode', 'enabled');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('darkMode', 'disabled');
+      }
+    });
+    
+    // ======================== EDIT PROFILE MODAL ========================
+    const editProfileModal = document.getElementById('editProfileModal');
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const closeEditModal = document.getElementById('closeEditModal');
+    const editProfileForm = document.getElementById('editProfileForm');
+    const profileName = document.querySelector('.text-xl.font-bold');
+    const profileEmail = document.querySelector('.text-sm.text-gray-500');
+    
+    editProfileBtn.addEventListener('click', () => {
+      editProfileModal.classList.remove('hidden');
+      editProfileModal.classList.add('flex');
+    });
+    
+    function closeEditModalFunc() {
+      editProfileModal.classList.add('hidden');
+      editProfileModal.classList.remove('flex');
+    }
+    
+    closeEditModal.addEventListener('click', closeEditModalFunc);
+    editProfileModal.addEventListener('click', (e) => {
+      if (e.target === editProfileModal) closeEditModalFunc();
+    });
+    
+    editProfileForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newName = document.getElementById('editName').value;
+      const newEmail = document.getElementById('editEmail').value;
+      
+      if (profileName) profileName.textContent = newName;
+      if (profileEmail) profileEmail.textContent = newEmail;
+      
+      closeEditModalFunc();
+      
+      // Show success toast
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow-lg z-50 animate-fade-in-up';
+      toast.textContent = '✅ Profile updated successfully!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    });
+    
+    // ======================== CHANGE PASSWORD MODAL ========================
+    const passwordModal = document.getElementById('passwordModal');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+    const closePasswordModal = document.getElementById('closePasswordModal');
+    const passwordForm = document.getElementById('passwordForm');
+    
+    changePasswordBtn.addEventListener('click', () => {
+      passwordModal.classList.remove('hidden');
+      passwordModal.classList.add('flex');
+    });
+    
+    function closePasswordModalFunc() {
+      passwordModal.classList.add('hidden');
+      passwordModal.classList.remove('flex');
+    }
+    
+    closePasswordModal.addEventListener('click', closePasswordModalFunc);
+    passwordModal.addEventListener('click', (e) => {
+      if (e.target === passwordModal) closePasswordModalFunc();
+    });
+    
+    passwordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      closePasswordModalFunc();
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow-lg z-50 animate-fade-in-up';
+      toast.textContent = '🔐 Password changed successfully!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    });
+    
+    // ======================== ADD PAYMENT METHOD ========================
+    const addPaymentMethodBtn = document.getElementById('addPaymentMethodBtn');
+    addPaymentMethodBtn.addEventListener('click', () => {
+      alert("💳 Add new card flow would open here");
+    });
+    
+    // ======================== CHANGE PHOTO ========================
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
+    changePhotoBtn.addEventListener('click', () => {
+      alert("📷 Upload profile picture feature coming soon");
+    });
+    
+    // ======================== SIGN OUT ========================
+    const signOutBtn = document.getElementById('signOutBtn');
+    signOutBtn.addEventListener('click', () => {
+      if (confirm("Are you sure you want to sign out?")) {
+        alert("👋 You have been signed out");
+        // window.location.href = 'index.html';
+      }
+    });
+    
+    // ======================== SAVE TOGGLE STATES ========================
+    const twoFactorToggle = document.getElementById('twoFactorToggle');
+    const biometricToggle = document.getElementById('biometricToggle');
+    const pushNotificationsToggle = document.getElementById('pushNotificationsToggle');
+    const emailAlertsToggle = document.getElementById('emailAlertsToggle');
+    const promoToggle = document.getElementById('promoToggle');
+    
+    // Load saved preferences
+    if (localStorage.getItem('twoFactor') === 'enabled') twoFactorToggle.checked = true;
+    if (localStorage.getItem('biometric') === 'enabled') biometricToggle.checked = true;
+    if (localStorage.getItem('pushNotifications') === 'enabled') pushNotificationsToggle.checked = true;
+    if (localStorage.getItem('emailAlerts') === 'enabled') emailAlertsToggle.checked = true;
+    if (localStorage.getItem('promo') === 'enabled') promoToggle.checked = true;
+    
+    twoFactorToggle.addEventListener('change', () => {
+      localStorage.setItem('twoFactor', twoFactorToggle.checked ? 'enabled' : 'disabled');
+    });
+    biometricToggle.addEventListener('change', () => {
+      localStorage.setItem('biometric', biometricToggle.checked ? 'enabled' : 'disabled');
+    });
+    pushNotificationsToggle.addEventListener('change', () => {
+      localStorage.setItem('pushNotifications', pushNotificationsToggle.checked ? 'enabled' : 'disabled');
+    });
+    emailAlertsToggle.addEventListener('change', () => {
+      localStorage.setItem('emailAlerts', emailAlertsToggle.checked ? 'enabled' : 'disabled');
+    });
+    promoToggle.addEventListener('change', () => {
+      localStorage.setItem('promo', promoToggle.checked ? 'enabled' : 'disabled');
+    });
+  </script>
+</body>
+</html>
