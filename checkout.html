@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>DailyFlutterUI · Checkout</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sf': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 20px 35px -12px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)',
+          },
+          keyframes: {
+            'fade-in-up': {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            'scale-pop': {
+              '0%': { transform: 'scale(0.95)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            },
+            'spin-slow': {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' }
+            }
+          },
+          animation: {
+            'fade-in-up': 'fade-in-up 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards',
+            'scale-pop': 'scale-pop 0.3s ease-out forwards',
+            'spin-slow': 'spin-slow 1s linear infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b2e 100%);
+    }
+    
+    /* Card 3D Flip Styles */
+    .card-flip-container {
+      perspective: 1500px;
+      width: 280px;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .card-flipper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      transform-style: preserve-3d;
+      border-radius: 1rem;
+      min-height: 210px;
+    }
+    
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 1rem;
+      top: 0;
+      left: 0;
+    }
+    
+    .card-front {
+      transform: rotateY(0deg);
+    }
+    
+    .card-back {
+      transform: rotateY(180deg);
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    /* Flip state */
+    .card-flip-container.flipped .card-flipper {
+      transform: rotateY(180deg);
+    }
+    
+    /* Swipe hint animation */
+    .swipe-hint {
+      animation: swipePulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes swipePulse {
+      0%, 100% { opacity: 0.3; transform: translateX(0); }
+      50% { opacity: 0.8; transform: translateX(5px); }
+    }
+    
+    /* Active card border highlight */
+    .card-active .card-flipper .card-front {
+      border: 2px solid #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.4), 0 20px 35px -12px black;
+    }
+    
+    /* Active payment method highlight */
+    .payment-active {
+      background-color: rgb(77, 0, 128)!important;
+      border-left: 4px solid #3b82f6 !important;
+    }
+    .dark .payment-active {
+      background-color: #1e3a8a !important;
+      border-left-color: #60a5fa !important;
+    }
+    
+    /* Button press effect */
+    .btn-press:active {
+      transform: scale(0.96);
+    }
+    
+    /* Modal backdrop */
+    .modal-backdrop {
+      backdrop-filter: blur(8px);
+      background-color: rgba(0,0,0,0.65);
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Confetti canvas */
+    .confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 200;
+    }
+    
+    /* Hide scrollbar but keep functionality */
+    .no-scrollbar {
+      scrollbar-width: thin;
+      -ms-overflow-style: auto;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .no-scrollbar::-webkit-scrollbar-track {
+      background: #e5e7eb;
+      border-radius: 10px;
+    }
+    .no-scrollbar::-webkit-scrollbar-thumb {
+      background: #9ca3af;
+      border-radius: 10px;
+    }
+    
+    /* Cards scroll container */
+    .cards-scroll {
+      scroll-snap-type: x mandatory;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      gap: 1rem;
+      padding-bottom: 0.5rem;
+      padding-right: 1rem;
+    }
+    .card-snap {
+      scroll-snap-align: start;
+    }
+    
+    /* Ensure proper spacing */
+    .content-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Smooth scrolling for the whole page */
+    .scroll-container {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      height: 100%;
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body class="font-sf">
+  
+  <!-- Fullscreen container with scrolling content -->
+  <div class="w-full h-screen flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
+    
+    <!-- Fixed Header with Back Arrow - Now redirects to home.html -->
+    <div class="flex justify-between items-center px-5 pt-5 pb-3 flex-shrink-0 bg-gray-50 dark:bg-gray-900 z-10 border-b border-gray-100 dark:border-gray-800">
+      <button id="backBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white transition active:scale-95 shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700">
+        ←
+      </button>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Checkout</h1>
+      <div class="relative">
+        <button class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+          🔔
+        </button>
+        <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900"></span>
+      </div>
+    </div>
+
+    <!-- Scrollable content area -->
+    <div class="flex-1 overflow-y-auto scroll-container px-5">
+      
+      <!-- Section 1: Your Cards -->
+      <div class="content-section">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Your Cards</h2>
+          <button id="addCardBtn" class="text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-3 py-1.5 rounded-full hover:bg-blue-100 transition active:scale-95">+ Add Card</button>
+        </div>
+
+        <!-- Swipeable horizontal cards -->
+        <div class="relative">
+          <div class="cards-scroll no-scrollbar">
+            <!-- Visa Card -->
+            <div class="card-flip-container card-snap" data-card-id="visa" data-card-number="4242 5678 9012 3456" data-card-type="VISA" data-last4="3456" data-balance="12480.50" data-payment-type="card">
+              <div class="card-flipper">
+                <div class="card-front rounded-2xl bg-gradient-to-br from-[#1A2A3A] to-[#0F172A] text-white shadow-card p-5">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="text-xs opacity-80 tracking-wide">BALANCE</p>
+                      <p class="text-2xl font-bold mt-1">$12,480.50</p>
+                    </div>
+                    <div class="text-3xl font-black tracking-wider italic">VISA</div>
+                  </div>
+                  <div class="mt-6">
+                    <p class="text-base tracking-wider font-mono">4242 5678 9012 3456</p>
+                    <div class="flex justify-between mt-3 text-xs">
+                      <span>Cardholder: <span class="font-semibold">DailyFlutterUI</span></span>
+                      <span>Expiry: 08/28</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-back rounded-2xl">
+                  <div class="flex flex-col h-full">
+                    <div class="bg-gray-800 h-10 w-full -mt-2 rounded-t-lg"></div>
+                    <div class="mt-4 bg-gray-700 rounded py-1 px-2 text-right">
+                      <span class="text-white text-xs font-mono">***</span>
+                    </div>
+                    <div class="mt-4 text-white text-xs">
+                      <p class="opacity-70">Customer Service</p>
+                      <p class="font-mono text-sm">1-800-VISA-123</p>
+                    </div>
+                    <div class="mt-auto text-right text-white text-xs opacity-60">
+                      <p>Secure Chip</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mastercard -->
+            <div class="card-flip-container card-snap" data-card-id="mastercard" data-card-number="5555 4444 3333 2222" data-card-type="MASTERCARD" data-last4="2222" data-balance="8920.20" data-payment-type="card">
+              <div class="card-flipper">
+                <div class="card-front rounded-2xl bg-gradient-to-br from-[#6B21A5] to-[#D946EF] text-white shadow-card p-5">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="text-xs opacity-80">BALANCE</p>
+                      <p class="text-2xl font-bold mt-1">$8,920.20</p>
+                    </div>
+                    <div class="flex gap-1 items-center">
+                      <div class="w-7 h-7 bg-red-500 rounded-full opacity-90"></div>
+                      <div class="w-7 h-7 bg-yellow-500 rounded-full opacity-90 -ml-3"></div>
+                    </div>
+                  </div>
+                  <div class="mt-6">
+                    <p class="text-base tracking-wider font-mono">5555 4444 3333 2222</p>
+                    <div class="flex justify-between mt-3 text-xs">
+                      <span>Cardholder: <span class="font-semibold">DailyFlutterUI</span></span>
+                      <span>Expiry: 03/27</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-back rounded-2xl">
+                  <div class="flex flex-col h-full">
+                    <div class="bg-gray-800 h-10 w-full -mt-2 rounded-t-lg"></div>
+                    <div class="mt-4 bg-gray-700 rounded py-1 px-2 text-right">
+                      <span class="text-white text-xs font-mono">***</span>
+                    </div>
+                    <div class="mt-4 text-white text-xs">
+                      <p class="opacity-70">Customer Service</p>
+                      <p class="font-mono text-sm">1-800-MC-HELP</p>
+                    </div>
+                    <div class="mt-auto text-right text-white text-xs opacity-60">
+                      <p>Secure Chip</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Swipe hint -->
+          <div class="absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+            <div class="swipe-hint text-gray-400 dark:text-gray-500 text-xs bg-white/70 dark:bg-gray-800/70 rounded-full px-2 py-1 backdrop-blur-sm shadow-sm">
+              → swipe
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Other Payment Methods -->
+      <div class="content-section">
+        <h3 class="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Other Payment Methods</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+          <div class="payment-option flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition cursor-pointer" data-payment-type="paypal" data-payment-name="PayPal">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">💰</span>
+              <span class="font-medium text-gray-800 dark:text-white">PayPal</span>
+            </div>
+            <span class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-semibold px-2 py-1 rounded-full">Instant</span>
+          </div>
+          <div class="payment-option flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition cursor-pointer" data-payment-type="applepay" data-payment-name="Apple Pay">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🍎</span>
+              <span class="font-medium text-gray-800 dark:text-white">Apple Pay</span>
+            </div>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Ready to pay</span>
+          </div>
+          <div class="payment-option flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition cursor-pointer rounded-b-2xl" data-payment-type="banktransfer" data-payment-name="Bank Transfer">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🏦</span>
+              <span class="font-medium text-gray-800 dark:text-white">Bank Transfer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Recent Activity -->
+      <div class="content-section">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Recent Activity</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">$249.00</p>
+            <p class="text-xs text-gray-400 mt-0.5">Total to pay</p>
+          </div>
+          <button id="seeAllBtn" class="text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline active:scale-95 transition">See all</button>
+        </div>
+      </div>
+
+      <!-- Section 4: Payment History -->
+      <div class="content-section">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 mt-2">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Recent Transactions</p>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">🛒</div>
+                <div>
+                  <p class="text-sm font-medium text-gray-800 dark:text-white">Amazon Purchase</p>
+                  <p class="text-xs text-gray-400">Apr 15, 2026</p>
+                </div>
+              </div>
+              <p class="text-sm font-semibold text-gray-800 dark:text-white">-$89.50</p>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">🍔</div>
+                <div>
+                  <p class="text-sm font-medium text-gray-800 dark:text-white">Food Delivery</p>
+                  <p class="text-xs text-gray-400">Apr 12, 2026</p>
+                </div>
+              </div>
+              <p class="text-sm font-semibold text-gray-800 dark:text-white">-$42.30</p>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900/40 rounded-full flex items-center justify-center">🎵</div>
+                <div>
+                  <p class="text-sm font-medium text-gray-800 dark:text-white">Spotify Subscription</p>
+                  <p class="text-xs text-gray-400">Apr 10, 2026</p>
+                </div>
+              </div>
+              <p class="text-sm font-semibold text-gray-800 dark:text-white">-$15.99</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment Bar (scrolls with content) -->
+      <div class="bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 px-5 py-4 rounded-t-3xl shadow-2xl mt-6 mb-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">$249.00</p>
+          </div>
+          <button id="payButton" class="bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all duration-200 px-7 py-3 rounded-full text-white font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/30">
+            Pay $249.00
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Extra spacer -->
+      <div class="h-4"></div>
+    </div>
+  </div>
+
+  <!-- Modal for Card Addition Form -->
+  <div id="addCardModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden p-6 z-10 transform transition-all animate-scale-pop">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Add New Card</h2>
+        <button id="closeAddCardModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+      </div>
+      <form id="addCardForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Card Number</label>
+          <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cardholder Name</label>
+          <input type="text" id="cardholderName" placeholder="John Doe" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry (MM/YY)</label>
+            <input type="text" id="expiry" placeholder="12/25" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CVV</label>
+            <input type="text" id="cvv" placeholder="123" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all btn-press mt-4">Add Card</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden p-6 text-center z-10 transform transition-all" id="modalContent"></div>
+  </div>
+
+  <canvas id="confettiCanvas" class="confetti-canvas hidden"></canvas>
+
+  <script>
+    // ======================== BACK BUTTON REDIRECT TO HOME.HTML ========================
+    const backBtn = document.getElementById('backBtn');
+    backBtn.addEventListener('click', () => {
+      // Redirect to home.html (or index.html if you named it that)
+      window.location.href = 'home.html';
+    });
+    
+    // ======================== CARD FLIP ON HOVER/TOUCH ========================
+    const cardContainers = document.querySelectorAll('.card-flip-container');
+    
+    cardContainers.forEach(container => {
+      container.addEventListener('mouseenter', () => container.classList.add('flipped'));
+      container.addEventListener('mouseleave', () => container.classList.remove('flipped'));
+      
+      let flipTimeout;
+      container.addEventListener('touchstart', (e) => {
+        flipTimeout = setTimeout(() => container.classList.add('flipped'), 150);
+      });
+      container.addEventListener('touchend', () => {
+        clearTimeout(flipTimeout);
+        setTimeout(() => container.classList.remove('flipped'), 500);
+      });
+    });
+    
+    // ======================== PAYMENT SELECTION STATE ========================
+    let selectedPaymentMethod = {
+      type: 'card',
+      name: 'VISA',
+      last4: '3456',
+      fullNumber: '4242 5678 9012 3456'
+    };
+    
+    let selectedCardContainer = null;
+    const cardFlipContainers = document.querySelectorAll('.card-flip-container');
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    
+    function setActiveCard(container) {
+      cardFlipContainers.forEach(card => {
+        card.classList.remove('card-active');
+      });
+      container.classList.add('card-active');
+      
+      paymentOptions.forEach(opt => {
+        opt.classList.remove('payment-active');
+      });
+      
+      const last4 = container.getAttribute('data-last4');
+      const cardNumber = container.getAttribute('data-card-number');
+      const cardType = container.getAttribute('data-card-type');
+      selectedPaymentMethod = {
+        type: 'card',
+        name: cardType,
+        last4: last4,
+        fullNumber: cardNumber
+      };
+      selectedCardContainer = container;
+    }
+    
+    function setActivePaymentOption(optionEl) {
+      cardFlipContainers.forEach(card => {
+        card.classList.remove('card-active');
+      });
+      paymentOptions.forEach(opt => {
+        opt.classList.remove('payment-active');
+      });
+      optionEl.classList.add('payment-active');
+      
+      const paymentType = optionEl.getAttribute('data-payment-type');
+      const paymentName = optionEl.getAttribute('data-payment-name');
+      selectedPaymentMethod = {
+        type: paymentType,
+        name: paymentName,
+        last4: null,
+        fullNumber: null
+      };
+      selectedCardContainer = null;
+    }
+    
+    // Initialize first card as active
+    if (cardFlipContainers.length) {
+      setActiveCard(cardFlipContainers[0]);
+    }
+    
+    cardFlipContainers.forEach(container => {
+      container.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setActiveCard(container);
+      });
+    });
+    
+    paymentOptions.forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setActivePaymentOption(option);
+      });
+    });
+    
+    // ======================== CARD ADDITION ========================
+    const addCardModal = document.getElementById('addCardModal');
+    const addCardBtn = document.getElementById('addCardBtn');
+    const closeAddCardModal = document.getElementById('closeAddCardModal');
+    const addCardForm = document.getElementById('addCardForm');
+    
+    addCardBtn.addEventListener('click', () => {
+      addCardModal.classList.remove('hidden');
+      addCardModal.classList.add('flex');
+    });
+    
+    function closeAddCardModalFunc() {
+      addCardModal.classList.add('hidden');
+      addCardModal.classList.remove('flex');
+    }
+    
+    closeAddCardModal.addEventListener('click', closeAddCardModalFunc);
+    addCardModal.addEventListener('click', (e) => {
+      if (e.target === addCardModal) closeAddCardModalFunc();
+    });
+    
+    addCardForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const cardNumber = document.getElementById('cardNumber').value;
+      const cardholderName = document.getElementById('cardholderName').value;
+      const expiry = document.getElementById('expiry').value;
+      
+      if (cardNumber && cardholderName && expiry) {
+        const last4 = cardNumber.replace(/\s/g, '').slice(-4);
+        
+        const newCardContainer = document.createElement('div');
+        newCardContainer.className = 'card-flip-container card-snap';
+        newCardContainer.setAttribute('data-card-id', 'card_' + Date.now());
+        newCardContainer.setAttribute('data-card-number', cardNumber);
+        newCardContainer.setAttribute('data-card-type', 'NEW CARD');
+        newCardContainer.setAttribute('data-last4', last4);
+        newCardContainer.setAttribute('data-payment-type', 'card');
+        
+        newCardContainer.innerHTML = `
+          <div class="card-flipper">
+            <div class="card-front rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-800 text-white shadow-card p-5">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs opacity-80 tracking-wide">BALANCE</p>
+                  <p class="text-2xl font-bold mt-1">$0.00</p>
+                </div>
+                <div class="text-2xl font-black tracking-wider">💳</div>
+              </div>
+              <div class="mt-6">
+                <p class="text-base tracking-wider font-mono">${cardNumber}</p>
+                <div class="flex justify-between mt-3 text-xs">
+                  <span>Cardholder: <span class="font-semibold">${cardholderName.toUpperCase()}</span></span>
+                  <span>Expiry: ${expiry}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-back rounded-2xl">
+              <div class="flex flex-col h-full">
+                <div class="bg-gray-800 h-10 w-full -mt-2 rounded-t-lg"></div>
+                <div class="mt-4 bg-gray-700 rounded py-1 px-2 text-right">
+                  <span class="text-white text-xs font-mono">***</span>
+                </div>
+                <div class="mt-4 text-white text-xs">
+                  <p class="opacity-70">Customer Service</p>
+                  <p class="font-mono text-sm">1-800-NEW-CARD</p>
+                </div>
+                <div class="mt-auto text-right text-white text-xs opacity-60">
+                  <p>Secure Chip</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        const cardsContainer = document.querySelector('.cards-scroll');
+        cardsContainer.appendChild(newCardContainer);
+        
+        newCardContainer.addEventListener('mouseenter', () => newCardContainer.classList.add('flipped'));
+        newCardContainer.addEventListener('mouseleave', () => newCardContainer.classList.remove('flipped'));
+        newCardContainer.addEventListener('click', () => setActiveCard(newCardContainer));
+        
+        setActiveCard(newCardContainer);
+        closeAddCardModalFunc();
+        addCardForm.reset();
+        
+        const toastMsg = document.createElement('div');
+        toastMsg.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full text-sm shadow-lg z-50 animate-fade-in-up';
+        toastMsg.textContent = '✅ Card added successfully!';
+        document.body.appendChild(toastMsg);
+        setTimeout(() => toastMsg.remove(), 2000);
+      }
+    });
+    
+    // ======================== PAYMENT FLOW ========================
+    const paymentModal = document.getElementById('paymentModal');
+    const modalContent = document.getElementById('modalContent');
+    const payBtn = document.getElementById('payButton');
+    const seeAllBtn = document.getElementById('seeAllBtn');
+    
+    let isProcessing = false;
+    
+    function closePaymentModal() {
+      paymentModal.classList.add('hidden');
+      paymentModal.classList.remove('flex');
+      const confettiCanvas = document.getElementById('confettiCanvas');
+      confettiCanvas.classList.add('hidden');
+      const ctx = confettiCanvas.getContext('2d');
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+    
+    function startConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      canvas.classList.remove('hidden');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext('2d');
+      const particles = [];
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 7 + 3,
+          color: `hsl(${Math.random() * 360}, 80%, 65%)`,
+          speedY: Math.random() * 8 + 6,
+          speedX: Math.random() * 2.5 - 1.25,
+        });
+      }
+      let animating = true;
+      function drawConfetti() {
+        if (!animating) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x, p.y, p.size, p.size * 0.6);
+          p.y += p.speedY;
+          p.x += p.speedX;
+          if (p.y > canvas.height) {
+            p.y = -15;
+            p.x = Math.random() * canvas.width;
+          }
+        });
+        requestAnimationFrame(drawConfetti);
+      }
+      drawConfetti();
+      setTimeout(() => {
+        animating = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.classList.add('hidden');
+      }, 3200);
+    }
+    
+    function showSuccessScreen() {
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const paymentDisplay = selectedPaymentMethod.last4 ? 
+        `${selectedPaymentMethod.name} •••• ${selectedPaymentMethod.last4}` : selectedPaymentMethod.name;
+      
+      modalContent.innerHTML = `
+        <div class="flex flex-col items-center py-4 animate-fade-in-up">
+          <div class="w-20 h-20 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mb-4 animate-bounce">
+            <svg class="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Payment Successful</h2>
+          <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">Your payment has been processed</p>
+          <div class="bg-gray-100 dark:bg-gray-800 w-full rounded-2xl p-4 mt-6 space-y-2 text-left">
+            <div class="flex justify-between"><span class="text-gray-500">Amount</span><span class="font-semibold">$249.00</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Payment Method</span><span class="font-semibold">${paymentDisplay}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Date</span><span class="font-semibold">${formattedDate}</span></div>
+          </div>
+          <button id="doneButton" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all btn-press">Done</button>
+        </div>
+      `;
+      document.getElementById('doneButton')?.addEventListener('click', closePaymentModal);
+      startConfetti();
+    }
+    
+    function startPaymentFlow() {
+      if (isProcessing) return;
+      isProcessing = true;
+      const paymentDisplay = selectedPaymentMethod.last4 ? 
+        `${selectedPaymentMethod.name} •••• ${selectedPaymentMethod.last4}` : selectedPaymentMethod.name;
+      
+      modalContent.innerHTML = `
+        <div class="flex flex-col items-center py-8">
+          <div class="relative w-20 h-20 mb-5">
+            <div class="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin-slow"></div>
+            <div class="absolute inset-0 flex items-center justify-center text-2xl">💳</div>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 dark:text-white">Processing Payment</h3>
+          <div class="mt-4 bg-gray-100 dark:bg-gray-800 rounded-xl p-3 w-full text-center">
+            <p class="text-sm text-gray-600">${paymentDisplay}</p>
+            <p class="text-lg font-bold mt-1">$249.00</p>
+          </div>
+          <p class="text-xs text-gray-400 mt-5">Processing securely...</p>
+        </div>
+      `;
+      paymentModal.classList.remove('hidden');
+      paymentModal.classList.add('flex');
+      
+      setTimeout(() => { showSuccessScreen(); isProcessing = false; }, 1800);
+    }
+    
+    payBtn.addEventListener('click', startPaymentFlow);
+    seeAllBtn.addEventListener('click', () => alert("📱 Recent transactions:\n• $249.00 - Today\n• $89.50 - Apr 10\n• $420.00 - Apr 5"));
+    paymentModal.addEventListener('click', (e) => { if (e.target === paymentModal) closePaymentModal(); });
+  </script>
+</body>
+</html>
